@@ -29,7 +29,7 @@ export function PlannerForm({ country, countries, onCountryChange, value, onChan
   return (
     <form className="flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
       <div>
-        <FieldLabel icon={<IconPin className="h-5 w-5" />} htmlFor="country" text="¿A dónde vas?" />
+        <FieldLabel icon={<IconPin className="h-5 w-5" />} htmlFor="country" text="País preparado" />
         <select
           id="country"
           value={country.id}

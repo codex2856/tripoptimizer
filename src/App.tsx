@@ -101,10 +101,15 @@ function App() {
             Tu bitácora
           </h2>
 
-          <div className="mb-6 flex gap-1 rounded-full border border-paper-line bg-paper p-1 text-sm">
+          <div className="mb-2 flex gap-1 rounded-full border border-paper-line bg-paper p-1 text-sm">
             <ModeTab active={mode === 'curated'} onClick={() => setMode('curated')} label="Países preparados" />
             <ModeTab active={mode === 'custom'} onClick={() => setMode('custom')} label="Cualquier lugar" />
           </div>
+          <p className="mb-6 text-xs text-ink-faint">
+            {mode === 'curated'
+              ? 'Elige uno de los países que ya preparé a fondo, o pasa a "Cualquier lugar" para cualquier destino del mundo.'
+              : 'Escribe tu país, ciudad de llegada y destinos — funciona para cualquier lugar del mundo.'}
+          </p>
 
           {mode === 'curated' ? (
             <PlannerForm
