@@ -19,6 +19,17 @@ const TYPE_ICON: Record<string, typeof IconPalm> = {
   'coastal-city': IconPin,
 };
 
+/** For freeform cities with no curated `types`, guess a fitting icon from
+ * whatever description we do have — better than always falling back to the
+ * same generic pin when there's no real photo either. */
+function inferIconFromText(text: string): typeof IconPalm | null {
+  const t = text.toLowerCase();
+  if (/beach|coast|island|seaside|playa|costa/.test(t)) return IconPalm;
+  if (/mountain|hik|volcano|forest|jungle|montañ|sierra/.test(t)) return IconMountain;
+  if (/histor|ancient|castle|temple|unesco|ruins|old town|catedral/.test(t)) return IconLandmark;
+  return null;
+}
+
 interface Props {
   city: City;
   badge?: string;
@@ -27,8 +38,8 @@ interface Props {
 
 export function CityCard({ city, badge, nights }: Props) {
   const { thumbnail, extract, loading } = useWikiSummary(city.wikiTitle);
-  const TypeIcon = TYPE_ICON[city.types[0]] ?? IconPin;
   const blurb = city.blurb || extract || 'Aún no tengo una descripción para este lugar.';
+  const TypeIcon = TYPE_ICON[city.types[0]] ?? inferIconFromText(`${city.blurb} ${extract ?? ''}`) ?? IconPin;
 
   return (
     <motion.article
