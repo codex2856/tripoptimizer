@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
-import './App.css';
+import { useMemo, useState, type ReactNode } from 'react';
 import { albania } from './data/albania';
 import { PlannerForm } from './components/PlannerForm';
-import { MapView } from './components/MapView';
+import { BrochureMap } from './components/BrochureMap';
 import { CityCard } from './components/CityCard';
 import { Timeline } from './components/Timeline';
+import { Hero } from './components/Hero';
+import { IconCompass, IconPin } from './components/icons';
 import { planTrip, type PlannerInput } from './lib/itinerary';
 
 const country = albania;
@@ -24,6 +25,7 @@ function App() {
 
   const plan = useMemo(() => planTrip(country, input), [input]);
   const hub = country.cities.find((c) => c.id === country.hubCityId)!;
+  const priorityCity = country.cities.find((c) => c.id === input.priorityCityId)!;
 
   const orderedStopsForMap = plan.route.map((s) => ({
     city: s.city,
@@ -31,48 +33,48 @@ function App() {
   }));
 
   return (
-    <div className="app">
-      <header className="hero">
-        <h1>Trip Optimizer</h1>
-        <p>
-          Dinos a dónde quieres ir y cuántos días tienes: te armamos la ruta más eficiente, sin perder tiempo
-          manejando y sin dejar de lado lo que de verdad quieres ver.
-        </p>
-      </header>
+    <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10 lg:px-8">
+      <Hero wikiTitle={priorityCity.wikiTitle} countryName={country.name} />
 
-      <main className="layout">
-        <section className="panel panel--form">
-          <h2>Tu viaje</h2>
+      <main className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr] lg:items-start">
+        <section className="grain rounded-3xl border border-paper-line bg-paper-dim/60 p-6 shadow-soft sm:p-7 lg:sticky lg:top-6">
+          <h2 className="mb-6 flex items-center gap-2 text-2xl font-semibold text-ink">
+            <IconCompass className="h-6 w-6 text-terracotta" /> Tu bitácora
+          </h2>
           <PlannerForm country={country} value={input} onChange={setInput} />
 
           {plan.warnings.length > 0 && (
-            <div className="warnings">
+            <div className="mt-5 flex flex-col gap-2 rounded-2xl border border-terracotta-light/60 bg-terracotta-light/15 p-4 text-sm text-terracotta-dark">
               {plan.warnings.map((w, i) => (
-                <p key={i}>⚠️ {w}</p>
+                <p key={i}>⚠ {w}</p>
               ))}
             </div>
           )}
 
-          <p className="travel-note">ℹ️ {country.travelNote}</p>
+          <p className="mt-4 rounded-2xl bg-sky-light/60 p-4 text-sm leading-relaxed text-sky-dark">
+            {country.travelNote}
+          </p>
 
-          <div className="summary">
+          <div className="mt-5 flex gap-8 border-t border-dashed border-paper-line pt-5">
             <div>
-              <span className="summary__value">{plan.totalDriveHours.toFixed(1)}h</span>
-              <span className="summary__label">de manejo en total</span>
+              <span className="font-display text-3xl font-semibold text-terracotta">
+                {plan.totalDriveHours.toFixed(1)}h
+              </span>
+              <p className="text-xs text-ink-soft">de manejo en total</p>
             </div>
             <div>
-              <span className="summary__value">{plan.route.length}</span>
-              <span className="summary__label">paradas en la ruta</span>
+              <span className="font-display text-3xl font-semibold text-terracotta">{plan.route.length}</span>
+              <p className="text-xs text-ink-soft">paradas en la ruta</p>
             </div>
           </div>
 
           {plan.droppedCities.length > 0 && (
-            <div className="dropped">
-              <h3>Para otro viaje</h3>
-              <ul>
+            <div className="mt-5 border-t border-dashed border-paper-line pt-4 text-sm text-ink-soft">
+              <h3 className="mb-2 font-semibold text-ink">Para otro viaje</h3>
+              <ul className="flex flex-col gap-1.5">
                 {plan.droppedCities.map((d) => (
                   <li key={d.city.id}>
-                    <strong>{d.city.name}:</strong> {d.reason}
+                    <strong className="text-ink">{d.city.name}:</strong> {d.reason}
                   </li>
                 ))}
               </ul>
@@ -80,20 +82,22 @@ function App() {
           )}
         </section>
 
-        <section className="panel panel--map">
-          <h2>Mapa de la ruta</h2>
-          <MapView country={country} orderedStops={orderedStopsForMap} />
-        </section>
+        <div className="flex flex-col gap-8">
+          <section>
+            <SectionTitle icon={<IconPin className="h-6 w-6" />} title="Mapa de la ruta" />
+            <BrochureMap country={country} orderedStops={orderedStopsForMap} />
+          </section>
+
+          <section>
+            <SectionTitle icon={<IconCompass className="h-6 w-6" />} title="Itinerario día a día" />
+            <Timeline schedule={plan.schedule} country={country} />
+          </section>
+        </div>
       </main>
 
-      <section className="panel panel--timeline">
-        <h2>Itinerario día a día</h2>
-        <Timeline schedule={plan.schedule} />
-      </section>
-
-      <section className="panel panel--cities">
-        <h2>Ciudades en tu ruta</h2>
-        <div className="city-grid">
+      <section className="mt-14">
+        <SectionTitle title="Ciudades en tu ruta" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
           <CityCard city={hub} badge="Base" />
           {plan.route.map((stop) => (
             <CityCard
@@ -107,9 +111,9 @@ function App() {
       </section>
 
       {plan.droppedCities.length > 0 && (
-        <section className="panel panel--cities">
-          <h2>Si tuvieras más días</h2>
-          <div className="city-grid">
+        <section className="mt-14">
+          <SectionTitle title="Si tuvieras más días" />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {plan.droppedCities.map((d) => (
               <CityCard key={d.city.id} city={d.city} />
             ))}
@@ -117,11 +121,20 @@ function App() {
         </section>
       )}
 
-      <footer className="footer">
-        Hecho con datos curados de Albania. Los restaurantes son sugerencias generales — confirma horarios y
+      <footer className="mt-16 border-t border-dashed border-paper-line pt-6 text-center text-sm text-ink-faint">
+        Hecho con datos curados de {country.name}. Los restaurantes son sugerencias generales — confirma horarios y
         disponibilidad antes de ir.
       </footer>
     </div>
+  );
+}
+
+function SectionTitle({ icon, title }: { icon?: ReactNode; title: string }) {
+  return (
+    <h2 className="mb-4 flex items-center gap-2 text-2xl font-semibold text-ink">
+      {icon && <span className="text-terracotta">{icon}</span>}
+      {title}
+    </h2>
   );
 }
 

@@ -43,4 +43,6 @@ export interface CountryData {
   cities: City[];
   driveHours: DriveMatrix;
   travelNote: string;
+  /** simplified national border, as [lon, lat] pairs, for the illustrative map */
+  outline: [number, number][];
 }

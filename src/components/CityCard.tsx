@@ -1,5 +1,6 @@
 import type { City } from '../data/types';
 import { useWikiSummary } from '../hooks/useWikiSummary';
+import { IconFork, IconLandmark, IconMountain, IconPalm, IconPin } from './icons';
 
 const TYPE_LABEL: Record<string, string> = {
   capital: 'Capital',
@@ -7,6 +8,14 @@ const TYPE_LABEL: Record<string, string> = {
   history: 'Histórico',
   nature: 'Naturaleza',
   'coastal-city': 'Ciudad costera',
+};
+
+const TYPE_ICON: Record<string, typeof IconPalm> = {
+  beach: IconPalm,
+  nature: IconMountain,
+  history: IconLandmark,
+  capital: IconLandmark,
+  'coastal-city': IconPin,
 };
 
 interface Props {
@@ -17,55 +26,73 @@ interface Props {
 
 export function CityCard({ city, badge, nights }: Props) {
   const { thumbnail, loading } = useWikiSummary(city.wikiTitle);
+  const TypeIcon = TYPE_ICON[city.types[0]] ?? IconPin;
 
   return (
-    <article className="city-card">
-      <div className="city-card__media">
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-paper-line bg-paper shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-sky-dark to-olive-dark">
         {thumbnail ? (
-          <img src={thumbnail} alt={city.name} loading="lazy" />
+          <img
+            src={thumbnail}
+            alt={city.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
         ) : (
-          <div className={`city-card__placeholder ${loading ? 'is-loading' : ''}`}>
-            <span>{city.name}</span>
+          <div className={`flex h-full w-full items-center justify-center text-paper ${loading ? 'opacity-60' : ''}`}>
+            <TypeIcon className="h-10 w-10" />
           </div>
         )}
-        {badge && <span className="city-card__badge">{badge}</span>}
+        {badge && (
+          <span className="absolute right-3 top-3 -rotate-6 rounded-full border-2 border-dashed border-paper bg-terracotta/90 px-3 py-1 font-hand text-lg leading-none text-paper shadow-soft">
+            {badge}
+          </span>
+        )}
       </div>
-      <div className="city-card__body">
+
+      <div className="flex flex-1 flex-col gap-3 p-5">
         <header>
-          <h3>{city.name}</h3>
-          <div className="city-card__tags">
+          <h3 className="font-display text-xl font-semibold text-ink">{city.name}</h3>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             {city.types.map((t) => (
-              <span key={t} className="tag">
+              <span key={t} className="rounded-full bg-sky-light px-2.5 py-0.5 text-xs font-semibold text-sky-dark">
                 {TYPE_LABEL[t] ?? t}
               </span>
             ))}
             {typeof nights === 'number' && nights > 0 && (
-              <span className="tag tag--nights">{nights} {nights === 1 ? 'noche' : 'noches'}</span>
+              <span className="rounded-full bg-terracotta-light/40 px-2.5 py-0.5 text-xs font-semibold text-terracotta-dark">
+                {nights} {nights === 1 ? 'noche' : 'noches'}
+              </span>
             )}
           </div>
         </header>
-        <p className="city-card__blurb">{city.blurb}</p>
+
+        <p className="text-sm leading-relaxed text-ink-soft">{city.blurb}</p>
 
         {city.attractions && city.attractions.length > 0 && (
-          <div className="city-card__attractions">
+          <div className="flex flex-col gap-2">
             {city.attractions.map((a) => (
-              <div key={a.name} className="attraction-chip">
-                <strong>{a.name}</strong>
-                <span>{a.note}</span>
+              <div key={a.name} className="rounded-lg border border-dashed border-paper-line bg-paper-dim px-3 py-2 text-xs">
+                <strong className="block text-sky-dark">{a.name}</strong>
+                <span className="text-ink-soft">{a.note}</span>
               </div>
             ))}
           </div>
         )}
 
         {city.restaurants.length > 0 && (
-          <div className="city-card__restaurants">
-            <h4>Dónde comer</h4>
-            <ul>
+          <div className="mt-1 border-t border-paper-line pt-3">
+            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-olive-dark">
+              <IconFork className="h-4 w-4" /> Dónde comer
+            </h4>
+            <ul className="flex flex-col gap-2.5">
               {city.restaurants.map((r) => (
-                <li key={r.name}>
-                  <span className="restaurant-name">{r.name}</span>
-                  <span className="restaurant-meta">{r.cuisine} · {r.price}</span>
-                  <span className="restaurant-note">{r.note}</span>
+                <li key={r.name} className="border-t border-paper-line pt-2 text-sm first:border-t-0 first:pt-0">
+                  <span className="font-semibold text-ink">{r.name}</span>
+                  <span className="ml-1.5 text-xs font-semibold text-terracotta">
+                    {r.cuisine} · {r.price}
+                  </span>
+                  <span className="block text-xs text-ink-soft">{r.note}</span>
                 </li>
               ))}
             </ul>
