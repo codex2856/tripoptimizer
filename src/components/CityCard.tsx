@@ -26,8 +26,9 @@ interface Props {
 }
 
 export function CityCard({ city, badge, nights }: Props) {
-  const { thumbnail, loading } = useWikiSummary(city.wikiTitle);
+  const { thumbnail, extract, loading } = useWikiSummary(city.wikiTitle);
   const TypeIcon = TYPE_ICON[city.types[0]] ?? IconPin;
+  const blurb = city.blurb || extract || 'Aún no tengo una descripción para este lugar.';
 
   return (
     <motion.article
@@ -85,7 +86,7 @@ export function CityCard({ city, badge, nights }: Props) {
           </div>
         </header>
 
-        <p className="text-sm leading-relaxed text-ink-soft">{city.blurb}</p>
+        <p className="text-sm leading-relaxed text-ink-soft">{blurb}</p>
 
         {city.attractions && city.attractions.length > 0 && (
           <div className="flex flex-col gap-2">
@@ -98,11 +99,11 @@ export function CityCard({ city, badge, nights }: Props) {
           </div>
         )}
 
-        {city.restaurants.length > 0 && (
-          <div className="mt-1 border-t border-paper-line pt-3">
-            <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-olive-dark">
-              <IconFork className="h-4 w-4" /> Dónde comer
-            </h4>
+        <div className="mt-1 border-t border-paper-line pt-3">
+          <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-olive-dark">
+            <IconFork className="h-4 w-4" /> Dónde comer
+          </h4>
+          {city.restaurants.length > 0 ? (
             <ul className="flex flex-col gap-2.5">
               {city.restaurants.map((r) => (
                 <li key={r.name} className="border-t border-paper-line pt-2 text-sm first:border-t-0 first:pt-0">
@@ -114,8 +115,12 @@ export function CityCard({ city, badge, nights }: Props) {
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            <p className="text-xs text-ink-faint">
+              Todavía no tengo restaurantes curados aquí — revisa Google Maps o TripAdvisor para esta ciudad.
+            </p>
+          )}
+        </div>
       </div>
     </motion.article>
   );

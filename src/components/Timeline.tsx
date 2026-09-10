@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import type { City, CountryData } from '../data/types';
 import type { ScheduleDay } from '../lib/itinerary';
 import { useWikiSummary } from '../hooks/useWikiSummary';
-import { IconFork, IconLandmark, IconMountain, IconPalm, IconPlane, IconRoad } from './icons';
+import { IconFork, IconLandmark, IconMountain, IconPalm, IconPin, IconPlane, IconRoad } from './icons';
 
 interface Props {
   schedule: ScheduleDay[];
@@ -10,11 +10,11 @@ interface Props {
 }
 
 function iconForCity(city?: City) {
-  if (!city) return IconRoad;
+  if (!city) return IconPin;
   if (city.types.includes('beach')) return IconPalm;
   if (city.types.includes('nature')) return IconMountain;
   if (city.types.includes('history') || city.types.includes('capital')) return IconLandmark;
-  return IconRoad;
+  return IconPin;
 }
 
 export function Timeline({ schedule, country }: Props) {

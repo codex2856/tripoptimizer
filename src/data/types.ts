@@ -37,8 +37,6 @@ export type DriveMatrix = Record<string, Record<string, number>>;
 export interface CountryData {
   id: string;
   name: string;
-  center: [number, number];
-  zoom: number;
   hubCityId: string;
   cities: City[];
   driveHours: DriveMatrix;

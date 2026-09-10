@@ -14,8 +14,6 @@ const driveHours: DriveMatrix = {
 export const albania: CountryData = {
   id: 'albania',
   name: 'Albania',
-  center: [40.9, 19.9],
-  zoom: 8,
   hubCityId: 'tirana',
   travelNote:
     'Las carreteras de Albania son sinuosas (mucha montaña) y el tráfico en Tirana y en la costa (sobre todo en temporada alta) puede ser denso. Los tiempos de manejo son estimados y conviene sumar un margen de 20-30%.',
