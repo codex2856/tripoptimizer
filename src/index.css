@@ -1,0 +1,29 @@
+:root {
+  --bg: #faf6f0;
+  --surface: #ffffff;
+  --ink: #24312c;
+  --ink-soft: #5c6b64;
+  --primary: #1f6f5c;
+  --primary-soft: #e6f0ec;
+  --accent: #e07a2f;
+  --accent-soft: #fbe9d9;
+  --border: #e7e0d4;
+  --danger: #c1442b;
+  --radius: 16px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+a {
+  color: var(--primary);
+}
