@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { City, CountryData } from '../data/types';
 import { computeProjection, project } from '../lib/geo';
 import { IconCompass } from './icons';
@@ -23,11 +24,18 @@ export function BrochureMap({ country, orderedStops }: Props) {
   const outlinePx = country.outline.map(([lon, lat]) => project(lon, lat, proj));
   const seq = [hub, ...orderedStops.map((s) => s.city), hub];
   const routePx = seq.map((c) => project(c.coords[1], c.coords[0], proj));
+  const routeKey = seq.map((c) => c.id).join('-');
 
   return (
     <figure className="m-0">
       <div className="relative rounded-2xl border border-paper-line bg-sky-light/40 p-3 shadow-soft">
-        <IconCompass className="absolute right-4 top-4 h-9 w-9 text-sky-dark/50" />
+        <motion.div
+          className="absolute right-4 top-4 text-sky-dark/50"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+        >
+          <IconCompass className="h-9 w-9" />
+        </motion.div>
         <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           role="img"
@@ -38,16 +46,17 @@ export function BrochureMap({ country, orderedStops }: Props) {
             <pattern id="paperGrain" width="9" height="9" patternUnits="userSpaceOnUse">
               <circle cx="1" cy="1" r="0.7" fill="currentColor" opacity="0.15" />
             </pattern>
-            <marker id="routeDot" viewBox="0 0 4 4" markerWidth="4" markerHeight="4" refX="2" refY="2">
-              <circle cx="2" cy="2" r="1.6" fill="currentColor" />
-            </marker>
           </defs>
 
-          <polygon
+          <motion.polygon
             points={outlinePx.map((p) => p.join(',')).join(' ')}
             className="fill-paper stroke-ink-soft"
             strokeWidth={1.6}
             strokeLinejoin="round"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            style={{ transformOrigin: '50% 50%' }}
           />
           <polygon
             points={outlinePx.map((p) => p.join(',')).join(' ')}
@@ -55,15 +64,16 @@ export function BrochureMap({ country, orderedStops }: Props) {
             className="text-olive"
           />
 
-          <polyline
+          <motion.polyline
+            key={routeKey}
             points={routePx.map((p) => p.join(',')).join(' ')}
             fill="none"
             className="stroke-terracotta"
             strokeWidth={2.2}
             strokeDasharray="1 8"
             strokeLinecap="round"
-            markerStart="url(#routeDot)"
-            markerEnd="url(#routeDot)"
+            animate={{ strokeDashoffset: [0, -36] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'linear' }}
           />
 
           {routePx.slice(0, -1).map(([x, y], i) => {
@@ -72,21 +82,23 @@ export function BrochureMap({ country, orderedStops }: Props) {
             const name = isHub ? hub.name : orderedStops[i - 1].city.name;
             const fillClass = isHub ? 'fill-terracotta' : nights && nights > 0 ? 'fill-olive' : 'fill-ink-faint';
             return (
-              <g key={`${name}-${i}`}>
+              <motion.g
+                key={`${name}-${i}`}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.15 + i * 0.08 }}
+                style={{ transformOrigin: `${x}px ${y}px` }}
+                whileHover={{ scale: 1.15 }}
+              >
                 <circle cx={x} cy={y} r={9} className={fillClass} stroke="var(--color-paper)" strokeWidth={2.4} />
                 <text x={x} y={y + 3.4} textAnchor="middle" className="fill-paper text-[10px] font-semibold">
                   {i + 1}
                 </text>
-                <text
-                  x={x}
-                  y={y - 13}
-                  textAnchor="middle"
-                  className="fill-ink font-hand text-[15px]"
-                >
+                <text x={x} y={y - 13} textAnchor="middle" className="fill-ink font-hand text-[15px]">
                   {name}
                   {isHub ? '' : nights ? ` · ${nights}n` : ' · de paso'}
                 </text>
-              </g>
+              </motion.g>
             );
           })}
         </svg>

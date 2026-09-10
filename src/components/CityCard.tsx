@@ -1,3 +1,4 @@
+import { motion } from 'motion/react';
 import type { City } from '../data/types';
 import { useWikiSummary } from '../hooks/useWikiSummary';
 import { IconFork, IconLandmark, IconMountain, IconPalm, IconPin } from './icons';
@@ -29,7 +30,14 @@ export function CityCard({ city, badge, nights }: Props) {
   const TypeIcon = TYPE_ICON[city.types[0]] ?? IconPin;
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-paper-line bg-paper shadow-soft transition-all duration-200 hover:-translate-y-1 hover:shadow-lift">
+    <motion.article
+      initial={{ opacity: 0, y: 22 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -6, rotate: -0.6 }}
+      className="group flex flex-col overflow-hidden rounded-2xl border border-paper-line bg-paper shadow-soft transition-shadow duration-200 hover:shadow-lift"
+    >
       <div className="relative h-44 overflow-hidden bg-gradient-to-br from-sky-dark to-olive-dark">
         {thumbnail ? (
           <img
@@ -40,13 +48,23 @@ export function CityCard({ city, badge, nights }: Props) {
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center text-paper ${loading ? 'opacity-60' : ''}`}>
-            <TypeIcon className="h-10 w-10" />
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <TypeIcon className="h-10 w-10" />
+            </motion.div>
           </div>
         )}
         {badge && (
-          <span className="absolute right-3 top-3 -rotate-6 rounded-full border-2 border-dashed border-paper bg-terracotta/90 px-3 py-1 font-hand text-lg leading-none text-paper shadow-soft">
+          <motion.span
+            initial={{ scale: 0, rotate: 0 }}
+            animate={{ scale: 1, rotate: -6 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.2 }}
+            className="absolute right-3 top-3 rounded-full border-2 border-dashed border-paper bg-terracotta/90 px-3 py-1 font-hand text-lg leading-none text-paper shadow-soft"
+          >
             {badge}
-          </span>
+          </motion.span>
         )}
       </div>
 
@@ -99,6 +117,6 @@ export function CityCard({ city, badge, nights }: Props) {
           </div>
         )}
       </div>
-    </article>
+    </motion.article>
   );
 }

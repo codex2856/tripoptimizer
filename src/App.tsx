@@ -1,29 +1,26 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { albania } from './data/albania';
+import { AnimatePresence, motion } from 'motion/react';
+import { countries, defaultPlannerInputFor, getCountry } from './data/countries';
 import { PlannerForm } from './components/PlannerForm';
 import { BrochureMap } from './components/BrochureMap';
 import { CityCard } from './components/CityCard';
 import { Timeline } from './components/Timeline';
 import { Hero } from './components/Hero';
 import { IconCompass, IconPin } from './components/icons';
+import { AnimatedNumber } from './components/AnimatedNumber';
 import { planTrip, type PlannerInput } from './lib/itinerary';
 
-const country = albania;
-
-const initialInput: PlannerInput = {
-  totalDays: 7,
-  priorityCityId: 'ksamil',
-  priorityDays: 4,
-  otherCityIds: ['berat', 'gjirokaster'],
-  firstNightAtHub: true,
-  lastNightAtHub: true,
-  maxDriveHours: 3.5,
-};
-
 function App() {
-  const [input, setInput] = useState<PlannerInput>(initialInput);
+  const [countryId, setCountryId] = useState(countries[0].id);
+  const country = getCountry(countryId);
+  const [input, setInput] = useState<PlannerInput>(() => defaultPlannerInputFor(country));
 
-  const plan = useMemo(() => planTrip(country, input), [input]);
+  const handleCountryChange = (id: string) => {
+    setCountryId(id);
+    setInput(defaultPlannerInputFor(getCountry(id)));
+  };
+
+  const plan = useMemo(() => planTrip(country, input), [country, input]);
   const hub = country.cities.find((c) => c.id === country.hubCityId)!;
   const priorityCity = country.cities.find((c) => c.id === input.priorityCityId)!;
 
@@ -39,17 +36,38 @@ function App() {
       <main className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[380px_1fr] lg:items-start">
         <section className="grain rounded-3xl border border-paper-line bg-paper-dim/60 p-6 shadow-soft sm:p-7 lg:sticky lg:top-6">
           <h2 className="mb-6 flex items-center gap-2 text-2xl font-semibold text-ink">
-            <IconCompass className="h-6 w-6 text-terracotta" /> Tu bitácora
+            <motion.span
+              className="inline-flex text-terracotta"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+            >
+              <IconCompass className="h-6 w-6" />
+            </motion.span>
+            Tu bitácora
           </h2>
-          <PlannerForm country={country} value={input} onChange={setInput} />
+          <PlannerForm
+            country={country}
+            countries={countries}
+            onCountryChange={handleCountryChange}
+            value={input}
+            onChange={setInput}
+          />
 
-          {plan.warnings.length > 0 && (
-            <div className="mt-5 flex flex-col gap-2 rounded-2xl border border-terracotta-light/60 bg-terracotta-light/15 p-4 text-sm text-terracotta-dark">
-              {plan.warnings.map((w, i) => (
-                <p key={i}>⚠ {w}</p>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {plan.warnings.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 20 }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col gap-2 overflow-hidden rounded-2xl border border-terracotta-light/60 bg-terracotta-light/15 p-4 text-sm text-terracotta-dark"
+              >
+                {plan.warnings.map((w, i) => (
+                  <p key={i}>⚠ {w}</p>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <p className="mt-4 rounded-2xl bg-sky-light/60 p-4 text-sm leading-relaxed text-sky-dark">
             {country.travelNote}
@@ -57,13 +75,19 @@ function App() {
 
           <div className="mt-5 flex gap-8 border-t border-dashed border-paper-line pt-5">
             <div>
-              <span className="font-display text-3xl font-semibold text-terracotta">
-                {plan.totalDriveHours.toFixed(1)}h
-              </span>
+              <AnimatedNumber
+                value={plan.totalDriveHours}
+                decimals={1}
+                suffix="h"
+                className="font-display text-3xl font-semibold text-terracotta"
+              />
               <p className="text-xs text-ink-soft">de manejo en total</p>
             </div>
             <div>
-              <span className="font-display text-3xl font-semibold text-terracotta">{plan.route.length}</span>
+              <AnimatedNumber
+                value={plan.route.length}
+                className="font-display text-3xl font-semibold text-terracotta"
+              />
               <p className="text-xs text-ink-soft">paradas en la ruta</p>
             </div>
           </div>

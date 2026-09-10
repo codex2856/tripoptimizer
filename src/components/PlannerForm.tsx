@@ -1,15 +1,18 @@
 import type { ReactNode } from 'react';
+import { motion } from 'motion/react';
 import type { CountryData } from '../data/types';
 import type { PlannerInput } from '../lib/itinerary';
-import { IconCalendarDays, IconCompass, IconPalm, IconRoad } from './icons';
+import { IconCalendarDays, IconCompass, IconPalm, IconPin, IconRoad } from './icons';
 
 interface Props {
   country: CountryData;
+  countries: CountryData[];
+  onCountryChange: (id: string) => void;
   value: PlannerInput;
   onChange: (next: PlannerInput) => void;
 }
 
-export function PlannerForm({ country, value, onChange }: Props) {
+export function PlannerForm({ country, countries, onCountryChange, value, onChange }: Props) {
   const nonHubCities = country.cities.filter((c) => c.id !== country.hubCityId);
   const priorityCity = country.cities.find((c) => c.id === value.priorityCityId);
   const maxPriorityNights = Math.max(1, value.totalDays - 1);
@@ -25,6 +28,25 @@ export function PlannerForm({ country, value, onChange }: Props) {
 
   return (
     <form className="flex flex-col gap-6" onSubmit={(e) => e.preventDefault()}>
+      <div>
+        <FieldLabel icon={<IconPin className="h-5 w-5" />} htmlFor="country" text="¿A dónde vas?" />
+        <select
+          id="country"
+          value={country.id}
+          onChange={(e) => onCountryChange(e.target.value)}
+          className={inputCls}
+        >
+          {countries.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-xs text-ink-faint">
+          ¿No está tu país? Dime cuál y lo preparo con esta misma profundidad.
+        </p>
+      </div>
+
       <FieldLabel icon={<IconCalendarDays className="h-5 w-5" />} htmlFor="days" text="Días totales de viaje" />
       <input
         id="days"
@@ -72,11 +94,15 @@ export function PlannerForm({ country, value, onChange }: Props) {
             .map((c) => {
               const active = value.otherCityIds.includes(c.id);
               return (
-                <button
+                <motion.button
                   type="button"
                   key={c.id}
                   onClick={() => toggleOtherCity(c.id)}
                   aria-pressed={active}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.94 }}
+                  animate={active ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+                  transition={{ duration: 0.28 }}
                   className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors duration-150 ${
                     active
                       ? 'border-olive bg-olive text-paper font-medium'
@@ -84,7 +110,7 @@ export function PlannerForm({ country, value, onChange }: Props) {
                   }`}
                 >
                   {c.name}
-                </button>
+                </motion.button>
               );
             })}
         </div>

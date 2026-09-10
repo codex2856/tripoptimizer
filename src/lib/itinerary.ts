@@ -47,7 +47,7 @@ function hours(matrix: CountryData['driveHours'], a: string, b: string): number 
  * Small N (<=8 candidate cities) so this greedy approach finds a near-optimal,
  * non-backtracking order without needing full TSP search.
  */
-function buildRoute(
+export function buildRoute(
   country: CountryData,
   hubId: string,
   priorityId: string,
