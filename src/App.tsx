@@ -7,7 +7,7 @@ import { Timeline } from './components/Timeline';
 import { Hero } from './components/Hero';
 import { IconCompass, IconPin } from './components/icons';
 import { AnimatedNumber } from './components/AnimatedNumber';
-import { planTrip } from './lib/itinerary';
+import { planTrip, type PlannerInput } from './lib/itinerary';
 import { buildCustomCountryData, plannerInputForCustom } from './lib/customCountry';
 import { fetchCountryOutline } from './lib/geocode';
 import { iso3ForCountryName } from './data/countryCodes';
@@ -21,10 +21,19 @@ const emptyCustomState: CustomTripState = {
   totalDays: 7,
 };
 
+interface Ready {
+  country: CountryData;
+  input: PlannerInput;
+}
+
 function App() {
   const [customState, setCustomState] = useState<CustomTripState>(emptyCustomState);
   const [customOutline, setCustomOutline] = useState<[number, number][]>([]);
-  const [country, setCountry] = useState<CountryData | null>(null);
+  // country + input are always set together from the same build, so a city id
+  // in `input` can never point at a `country.cities` list that hasn't caught
+  // up yet (that mismatch used to crash planTrip when you removed/added a
+  // destination while a previous build was still in flight).
+  const [ready, setReady] = useState<Ready | null>(null);
   const [building, setBuilding] = useState(false);
   const [started, setStarted] = useState(false);
   const buildVersion = useRef(0);
@@ -46,20 +55,24 @@ function App() {
 
   useEffect(() => {
     if (!customState.hub || customState.stops.length === 0) {
-      setCountry(null);
+      ++buildVersion.current; // invalidate any in-flight build so it can't overwrite this reset
+      setReady(null);
+      setBuilding(false);
       return;
     }
     const version = ++buildVersion.current;
+    const stateSnapshot = customState; // pair country+input from this exact snapshot, never a later one
     setBuilding(true);
-    buildCustomCountryData(customState, customOutline).then((result) => {
+    buildCustomCountryData(stateSnapshot, customOutline).then((result) => {
       if (version !== buildVersion.current) return; // a newer build superseded this one
-      setCountry(result?.country ?? null);
+      setReady(result ? { country: result.country, input: plannerInputForCustom(stateSnapshot) } : null);
       setBuilding(false);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customState.hub, customState.stops, customOutline]);
 
-  const input = country ? plannerInputForCustom(customState) : null;
+  const country = ready?.country ?? null;
+  const input = ready?.input ?? null;
   const plan = useMemo(() => (country && input ? planTrip(country, input) : null), [country, input]);
   const hub = country?.cities.find((c) => c.id === country.hubCityId);
   const priorityCity = country?.cities.find((c) => c.id === input?.priorityCityId);

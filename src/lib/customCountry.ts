@@ -29,8 +29,8 @@ export async function buildCustomCountryData(state: CustomTripState, outline: [n
     types: [],
     coords: s.coords,
     wikiTitle: s.name,
-    blurb: '',
-    nightsRecommended: [s.days, s.days] as [number, number],
+    blurb: s.blurb ?? '',
+    nightsRecommended: [1, 3] as [number, number],
     restaurants: [],
   }));
 
@@ -72,14 +72,33 @@ export async function buildCustomCountryData(state: CustomTripState, outline: [n
   };
 }
 
+/**
+ * With no explicit per-city day count from the user, we anchor the route on
+ * whichever suggested city is farthest from the hub (usually the trip's
+ * "signature" stop) and let the existing budget/detour logic in planTrip
+ * decide how the remaining days split across the rest.
+ */
 export function plannerInputForCustom(state: CustomTripState): PlannerInput {
-  const sorted = [...state.stops].sort((a, b) => b.days - a.days);
+  if (!state.hub || state.stops.length === 0) {
+    return {
+      totalDays: state.totalDays,
+      priorityCityId: '',
+      priorityDays: 1,
+      otherCityIds: [],
+      firstNightAtHub: true,
+      lastNightAtHub: true,
+      maxDriveHours: state.maxDriveHours,
+    };
+  }
+  const hubCoords = state.hub.coords;
+  const dist = (a: [number, number], b: [number, number]) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const sorted = [...state.stops].sort((a, b) => dist(hubCoords, b.coords) - dist(hubCoords, a.coords));
   const priority = sorted[0];
   const others = sorted.slice(1).map((s) => s.id);
   return {
     totalDays: state.totalDays,
-    priorityCityId: priority?.id ?? '',
-    priorityDays: priority?.days ?? 1,
+    priorityCityId: priority.id,
+    priorityDays: Math.max(2, Math.min(4, state.totalDays - 3)),
     otherCityIds: others,
     firstNightAtHub: true,
     lastNightAtHub: true,
