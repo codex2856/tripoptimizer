@@ -1,9 +1,14 @@
 import type { City, CountryData, DriveMatrix } from '../data/types';
 import type { CustomTripState } from '../components/CustomTripForm';
 import type { PlannerInput } from './itinerary';
-import { estimateDriveHours } from './geocode';
+import { realDriveHours } from './geocode';
 
-export function buildCustomCountryData(state: CustomTripState, outline: [number, number][]): CountryData | null {
+export interface CustomCountryResult {
+  country: CountryData;
+  anyRealRouting: boolean;
+}
+
+export async function buildCustomCountryData(state: CustomTripState, outline: [number, number][]): Promise<CustomCountryResult | null> {
   if (!state.hub || state.stops.length === 0) return null;
 
   const hubCity: City = {
@@ -31,32 +36,48 @@ export function buildCustomCountryData(state: CustomTripState, outline: [number,
 
   const cities = [hubCity, ...stopCities];
   const driveHours: DriveMatrix = {};
-  for (const a of cities) {
-    driveHours[a.id] = {};
-    for (const b of cities) {
-      if (a.id === b.id) continue;
-      driveHours[a.id][b.id] = estimateDriveHours(a.coords, b.coords);
-    }
+  for (const c of cities) driveHours[c.id] = {};
+
+  let anyRealRouting = false;
+  const pairs: [City, City][] = [];
+  for (let i = 0; i < cities.length; i++) {
+    for (let j = i + 1; j < cities.length; j++) pairs.push([cities[i], cities[j]]);
+  }
+  // OSRM's public demo server is rate-limited — run requests with light concurrency, not all at once
+  const concurrency = 4;
+  for (let i = 0; i < pairs.length; i += concurrency) {
+    const batch = pairs.slice(i, i + concurrency);
+    const results = await Promise.all(batch.map(([a, b]) => realDriveHours(a.coords, b.coords)));
+    batch.forEach(([a, b], idx) => {
+      const { hours, real } = results[idx];
+      driveHours[a.id][b.id] = hours;
+      driveHours[b.id][a.id] = hours;
+      if (real) anyRealRouting = true;
+    });
   }
 
   return {
-    id: 'custom',
-    name: state.countryName.trim() || 'tu destino',
-    hubCityId: 'hub',
-    cities,
-    driveHours,
-    outline,
-    travelNote:
-      'Los tiempos de manejo son una estimación en línea recta (no hay datos reales de carretera para cualquier lugar del mundo) — trátalos como referencia y confirma con un mapa antes de tu viaje.',
+    anyRealRouting,
+    country: {
+      id: 'custom',
+      name: state.countryName.trim() || 'tu destino',
+      hubCityId: 'hub',
+      cities,
+      driveHours,
+      outline,
+      travelNote: anyRealRouting
+        ? 'Los tiempos de manejo vienen de un servicio de rutas real (OSRM) sobre la red de carreteras — trátalos como una buena aproximación, no como el tiempo exacto que te marque tu GPS ese día.'
+        : 'No se pudo consultar el servicio de rutas reales, así que estos tiempos son una estimación en línea recta — trátalos solo como referencia.',
+    },
   };
 }
 
-export function plannerInputForCustom(state: CustomTripState, totalDays: number): PlannerInput {
+export function plannerInputForCustom(state: CustomTripState): PlannerInput {
   const sorted = [...state.stops].sort((a, b) => b.days - a.days);
   const priority = sorted[0];
   const others = sorted.slice(1).map((s) => s.id);
   return {
-    totalDays,
+    totalDays: state.totalDays,
     priorityCityId: priority?.id ?? '',
     priorityDays: priority?.days ?? 1,
     otherCityIds: others,

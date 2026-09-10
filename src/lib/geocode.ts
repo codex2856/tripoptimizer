@@ -35,12 +35,37 @@ export function haversineKm(a: [number, number], b: [number, number]): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** Rough driving-hours estimate from straight-line distance — no real road data available for arbitrary places. */
+/** Rough driving-hours estimate from straight-line distance — used only when real routing fails. */
 export function estimateDriveHours(a: [number, number], b: [number, number], avgKmh = 55): number {
   const straightKm = haversineKm(a, b);
   // roads rarely go in a straight line — pad distance to approximate real routing
   const roadKm = straightKm * 1.3;
   return roadKm / avgKmh;
+}
+
+export interface DriveEstimate {
+  hours: number;
+  real: boolean; // true = actual road routing (OSRM), false = straight-line fallback
+}
+
+/**
+ * Real road driving time via OSRM's free public routing server (no API key —
+ * unlike Google Maps' Directions API, which needs a billed key we don't have).
+ * Falls back to the straight-line estimate if the request fails for any reason
+ * (offline, rate-limited, route not found across water, etc).
+ */
+export async function realDriveHours(a: [number, number], b: [number, number]): Promise<DriveEstimate> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=false`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('osrm not ok');
+    const data = await res.json();
+    const seconds = data?.routes?.[0]?.duration;
+    if (typeof seconds !== 'number') throw new Error('no route');
+    return { hours: seconds / 3600, real: true };
+  } catch {
+    return { hours: estimateDriveHours(a, b), real: false };
+  }
 }
 
 /** Public, no-key GeoJSON country boundaries dataset, keyed by ISO3 code. */

@@ -15,6 +15,7 @@ export interface CustomTripState {
   hub: { name: string; coords: [number, number] } | null;
   stops: CustomStop[];
   maxDriveHours: number;
+  totalDays: number;
 }
 
 interface Props {
@@ -176,23 +177,37 @@ export function CustomTripForm({ value, onChange }: Props) {
           )}
         </AnimatePresence>
         <p className="mt-2 text-xs text-ink-faint">
-          Las distancias se estiman en línea recta (no hay datos reales de carretera para cualquier lugar del
-          mundo) — úsalas como referencia, no exactas.
+          Los tiempos de manejo se calculan con un servicio de rutas reales cuando es posible; si no responde, se
+          estiman en línea recta como respaldo.
         </p>
       </div>
 
-      <div>
-        <FieldLabel icon={<IconRoad className="h-5 w-5" />} htmlFor="custom-maxdrive" text="Máx. horas de manejo por día" />
-        <input
-          id="custom-maxdrive"
-          type="number"
-          min={1}
-          max={8}
-          step={0.5}
-          value={value.maxDriveHours}
-          onChange={(e) => onChange({ ...value, maxDriveHours: Number(e.target.value) })}
-          className={inputCls}
-        />
+      <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
+        <div className="flex-1">
+          <FieldLabel icon={<IconCalendarDays className="h-5 w-5" />} htmlFor="custom-days" text="Días totales de viaje" />
+          <input
+            id="custom-days"
+            type="number"
+            min={2}
+            max={30}
+            value={value.totalDays}
+            onChange={(e) => onChange({ ...value, totalDays: Number(e.target.value) })}
+            className={inputCls}
+          />
+        </div>
+        <div className="flex-1">
+          <FieldLabel icon={<IconRoad className="h-5 w-5" />} htmlFor="custom-maxdrive" text="Máx. horas de manejo/día" />
+          <input
+            id="custom-maxdrive"
+            type="number"
+            min={1}
+            max={8}
+            step={0.5}
+            value={value.maxDriveHours}
+            onChange={(e) => onChange({ ...value, maxDriveHours: Number(e.target.value) })}
+            className={inputCls}
+          />
+        </div>
       </div>
     </div>
   );
