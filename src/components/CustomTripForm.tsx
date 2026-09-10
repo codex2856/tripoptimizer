@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { geocodePlace } from '../lib/geocode';
-import { IconCalendarDays, IconCompass, IconPin, IconRoad } from './icons';
+import { IconCalendarDays, IconCompass, IconPin } from './icons';
 
 export interface CustomStop {
   id: string;
@@ -21,26 +21,16 @@ export interface CustomTripState {
 interface Props {
   value: CustomTripState;
   onChange: (next: CustomTripState) => void;
+  onStart: () => void;
 }
 
-export function CustomTripForm({ value, onChange }: Props) {
-  const [hubQuery, setHubQuery] = useState('');
-  const [hubStatus, setHubStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+export function CustomTripForm({ value, onChange, onStart }: Props) {
+  const [hubQuery, setHubQuery] = useState(value.hub?.name ?? '');
+  const [hubError, setHubError] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [stopQuery, setStopQuery] = useState('');
   const [stopDays, setStopDays] = useState(2);
   const [stopStatus, setStopStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-
-  const setHub = async () => {
-    if (!hubQuery.trim()) return;
-    setHubStatus('loading');
-    const result = await geocodePlace(hubQuery, value.countryName);
-    if (!result) {
-      setHubStatus('error');
-      return;
-    }
-    setHubStatus('idle');
-    onChange({ ...value, hub: { name: hubQuery.trim(), coords: result.coords } });
-  };
 
   const addStop = async () => {
     if (!stopQuery.trim()) return;
@@ -66,6 +56,27 @@ export function CustomTripForm({ value, onChange }: Props) {
   const updateStopDays = (id: string, days: number) =>
     onChange({ ...value, stops: value.stops.map((s) => (s.id === id ? { ...s, days } : s)) });
 
+  const handleStart = async () => {
+    setHubError(false);
+    if (!hubQuery.trim() || value.stops.length === 0) return;
+    setStarting(true);
+    let hub = value.hub;
+    if (!hub || hub.name !== hubQuery.trim()) {
+      const result = await geocodePlace(hubQuery, value.countryName);
+      if (!result) {
+        setHubError(true);
+        setStarting(false);
+        return;
+      }
+      hub = { name: hubQuery.trim(), coords: result.coords };
+      onChange({ ...value, hub });
+    }
+    onStart();
+    setStarting(false);
+  };
+
+  const canStart = hubQuery.trim().length > 0 && value.stops.length > 0 && !starting;
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -76,37 +87,21 @@ export function CustomTripForm({ value, onChange }: Props) {
           placeholder="ej. Japón, Perú, Marruecos…"
           value={value.countryName}
           onChange={(e) => onChange({ ...value, countryName: e.target.value })}
-          className={inputCls}
+          className={`${inputCls} w-full`}
         />
       </div>
 
       <div>
-        <FieldLabel icon={<IconCompass className="h-5 w-5" />} htmlFor="custom-hub" text="Ciudad de llegada y salida" />
-        <div className="flex gap-2">
-          <input
-            id="custom-hub"
-            type="text"
-            placeholder="ej. Tokio"
-            value={hubQuery}
-            onChange={(e) => setHubQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), setHub())}
-            className={inputCls}
-          />
-          <button
-            type="button"
-            onClick={setHub}
-            disabled={hubStatus === 'loading'}
-            className="flex-none rounded-2xl bg-olive px-4 py-2.5 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5 disabled:opacity-60"
-          >
-            {hubStatus === 'loading' ? '…' : 'Usar'}
-          </button>
-        </div>
-        {hubStatus === 'error' && <p className="mt-1.5 text-xs text-terracotta-dark">No encontré ese lugar, prueba otro nombre.</p>}
-        {value.hub && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-olive-dark">
-            <IconPin className="h-3.5 w-3.5" /> Llegada/salida: <strong>{value.hub.name}</strong>
-          </p>
-        )}
+        <FieldLabel icon={<IconCompass className="h-5 w-5" />} htmlFor="custom-hub" text="Ciudad de llegada" />
+        <input
+          id="custom-hub"
+          type="text"
+          placeholder="ej. Tokio"
+          value={hubQuery}
+          onChange={(e) => setHubQuery(e.target.value)}
+          className={`${inputCls} w-full`}
+        />
+        {hubError && <p className="mt-1.5 text-xs text-terracotta-dark">No encontré ese lugar, prueba otro nombre.</p>}
       </div>
 
       <div>
@@ -176,45 +171,40 @@ export function CustomTripForm({ value, onChange }: Props) {
             </ul>
           )}
         </AnimatePresence>
-        <p className="mt-2 text-xs text-ink-faint">
-          Los tiempos de manejo se calculan con un servicio de rutas reales cuando es posible; si no responde, se
-          estiman en línea recta como respaldo.
-        </p>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:gap-3">
-        <div className="flex-1">
-          <FieldLabel icon={<IconCalendarDays className="h-5 w-5" />} htmlFor="custom-days" text="Días totales de viaje" />
-          <input
-            id="custom-days"
-            type="number"
-            min={2}
-            max={30}
-            value={value.totalDays}
-            onChange={(e) => onChange({ ...value, totalDays: Number(e.target.value) })}
-            className={inputCls}
-          />
-        </div>
-        <div className="flex-1">
-          <FieldLabel icon={<IconRoad className="h-5 w-5" />} htmlFor="custom-maxdrive" text="Máx. horas de manejo/día" />
-          <input
-            id="custom-maxdrive"
-            type="number"
-            min={1}
-            max={8}
-            step={0.5}
-            value={value.maxDriveHours}
-            onChange={(e) => onChange({ ...value, maxDriveHours: Number(e.target.value) })}
-            className={inputCls}
-          />
-        </div>
+      <div>
+        <FieldLabel icon={<IconCalendarDays className="h-5 w-5" />} htmlFor="custom-days" text="Días totales de viaje" />
+        <input
+          id="custom-days"
+          type="number"
+          min={2}
+          max={30}
+          value={value.totalDays}
+          onChange={(e) => onChange({ ...value, totalDays: Number(e.target.value) })}
+          className={`${inputCls} w-full`}
+        />
       </div>
+
+      <motion.button
+        type="button"
+        onClick={handleStart}
+        disabled={!canStart}
+        whileHover={canStart ? { y: -2 } : undefined}
+        whileTap={canStart ? { scale: 0.97 } : undefined}
+        className="rounded-2xl bg-terracotta px-5 py-3.5 text-base font-semibold text-paper shadow-soft transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {starting ? 'Armando tu ruta…' : 'Comenzar'}
+      </motion.button>
+      {!canStart && !starting && (
+        <p className="-mt-3 text-xs text-ink-faint">Agrega tu ciudad de llegada y al menos un destino para comenzar.</p>
+      )}
     </div>
   );
 }
 
 const inputCls =
-  'w-full rounded-2xl border border-paper-line bg-paper px-4 py-2.5 text-ink shadow-sm outline-none transition-colors focus:border-terracotta focus:ring-2 focus:ring-terracotta/25';
+  'rounded-2xl border border-paper-line bg-paper px-4 py-2.5 text-ink shadow-sm outline-none transition-colors focus:border-terracotta focus:ring-2 focus:ring-terracotta/25';
 
 function FieldLabel({ icon, text, htmlFor }: { icon: ReactNode; text: string; htmlFor?: string }) {
   return (
