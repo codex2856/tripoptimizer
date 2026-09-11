@@ -56,7 +56,7 @@ export function CityCard({ city, badge, nights }: Props) {
             src={thumbnail}
             alt={city.name}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="photo-duotone h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className={`flex h-full w-full items-center justify-center text-paper ${loading ? 'opacity-60' : ''}`}>
@@ -85,12 +85,15 @@ export function CityCard({ city, badge, nights }: Props) {
           <h3 className="font-display text-xl font-semibold text-ink">{city.name}</h3>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             {city.types.map((t) => (
-              <span key={t} className="rounded-full bg-sky-light px-2.5 py-0.5 text-xs font-semibold text-sky-dark">
+              <span
+                key={t}
+                className="rounded-full bg-sky-light px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-sky-dark"
+              >
                 {TYPE_LABEL[t] ?? t}
               </span>
             ))}
             {typeof nights === 'number' && nights > 0 && (
-              <span className="rounded-full bg-terracotta-light/40 px-2.5 py-0.5 text-xs font-semibold text-terracotta-dark">
+              <span className="rounded-full bg-terracotta-light/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-terracotta-dark">
                 {nights} {nights === 1 ? 'noche' : 'noches'}
               </span>
             )}

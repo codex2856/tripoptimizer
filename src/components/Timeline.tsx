@@ -106,7 +106,7 @@ function DayPhoto({ wikiTitle, name }: { wikiTitle: string; name: string }) {
       src={thumbnail}
       alt={name}
       loading="lazy"
-      className="mt-3 h-36 w-full rounded-xl object-cover sm:h-44"
+      className="photo-duotone mt-3 h-36 w-full rounded-xl object-cover sm:h-44"
     />
   );
 }

@@ -5,6 +5,8 @@ import { BrochureMap } from './components/BrochureMap';
 import { CityCard } from './components/CityCard';
 import { Timeline } from './components/Timeline';
 import { Hero } from './components/Hero';
+import { Header } from './components/Header';
+import { StatusBar } from './components/StatusBar';
 import { IconCompass, IconPin } from './components/icons';
 import { AnimatedNumber } from './components/AnimatedNumber';
 import { planTrip, type PlannerInput } from './lib/itinerary';
@@ -83,15 +85,24 @@ function App() {
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10 lg:px-8">
+    <>
+      <Header />
+      <div className="mx-auto max-w-6xl px-4 pb-20 pt-6 sm:px-6 sm:pt-10 lg:px-8">
       <Hero
         wikiTitle={priorityCity?.wikiTitle ?? hub?.wikiTitle ?? 'Travel'}
         countryName={country?.name ?? (customState.countryName || 'donde quieras')}
       />
 
-      <main className={`mt-10 grid grid-cols-1 gap-8 ${started ? 'lg:grid-cols-[380px_1fr]' : ''} lg:items-start`}>
-        <section className="grain rounded-3xl border border-paper-line bg-paper-dim/60 p-6 shadow-soft sm:p-7 lg:sticky lg:top-6">
-          <h2 className="mb-6 flex items-center gap-2 text-2xl font-semibold text-ink">
+      <StatusBar
+        countryName={customState.countryName}
+        hubName={customState.hub?.name}
+        totalDays={customState.totalDays}
+        stopsCount={customState.stops.length}
+      />
+
+      <main id="bitacora" className={`mt-10 scroll-mt-24 grid grid-cols-1 gap-8 ${started ? 'lg:grid-cols-[380px_1fr]' : ''} lg:items-start`}>
+        <section className="grain rounded-3xl border border-ink bg-paper-dim/60 p-6 shadow-soft sm:p-7 lg:sticky lg:top-24">
+          <h2 className="mb-6 flex items-center gap-2 font-display text-3xl text-ink">
             <motion.span
               className="inline-flex text-terracotta"
               animate={{ rotate: 360 }}
@@ -99,7 +110,7 @@ function App() {
             >
               <IconCompass className="h-6 w-6" />
             </motion.span>
-            Tu bitácora
+            Tu viaje
           </h2>
 
           <CustomTripForm value={customState} onChange={setCustomState} onStart={() => setStarted(true)} />
@@ -160,7 +171,7 @@ function App() {
 
         {started && (
           <div className="flex flex-col gap-8">
-            <section>
+            <section id="mapa" className="scroll-mt-24">
               <SectionTitle icon={<IconPin className="h-6 w-6" />} title="Mapa de la ruta" />
               {country ? (
                 <BrochureMap country={country} orderedStops={orderedStopsForMap} />
@@ -169,7 +180,7 @@ function App() {
               )}
             </section>
 
-            <section>
+            <section id="itinerario" className="scroll-mt-24">
               <SectionTitle icon={<IconCompass className="h-6 w-6" />} title="Itinerario día a día" />
               {plan && country ? (
                 <Timeline schedule={plan.schedule} country={country} />
@@ -182,7 +193,7 @@ function App() {
       </main>
 
       {started && plan && country && hub && (
-        <section className="mt-14">
+        <section id="ciudades" className="mt-14 scroll-mt-24">
           <SectionTitle title="Ciudades en tu ruta" />
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             <CityCard city={hub} badge="Base" />
@@ -215,7 +226,19 @@ function App() {
           antes de viajar.
         </footer>
       )}
-    </div>
+      </div>
+      <footer className="bg-ink px-4 py-10 text-paper sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
+            <IconCompass className="h-6 w-6 text-olive" />
+            <span className="font-display text-lg tracking-wide">TRIP OPTIMIZER</span>
+          </div>
+          <p className="max-w-md text-xs uppercase tracking-[0.1em] text-paper/60">
+            Datos en vivo de Wikivoyage, OpenStreetMap y Wikipedia — no somos una agencia de viajes.
+          </p>
+        </div>
+      </footer>
+    </>
   );
 }
 
@@ -229,10 +252,16 @@ function EmptyState({ text }: { text: string }) {
 
 function SectionTitle({ icon, title }: { icon?: ReactNode; title: string }) {
   return (
-    <h2 className="mb-4 flex items-center gap-2 text-2xl font-semibold text-ink">
+    <motion.h2
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-60px' }}
+      transition={{ duration: 0.5 }}
+      className="mb-4 flex items-center gap-2 font-display text-3xl text-ink"
+    >
       {icon && <span className="text-terracotta">{icon}</span>}
       {title}
-    </h2>
+    </motion.h2>
   );
 }
 

@@ -17,21 +17,22 @@ export function Hero({ wikiTitle, countryName }: Props) {
   const { thumbnail } = useWikiSummary(wikiTitle);
 
   return (
-    <header className="relative isolate overflow-hidden rounded-3xl border border-paper-line shadow-lift">
-      <motion.div
-        className="absolute inset-0 -z-10 bg-[linear-gradient(120deg,var(--color-olive-dark),var(--color-sky-dark)_45%,var(--color-terracotta-dark)_100%)] bg-[length:220%_220%]"
-        animate={{ backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'] }}
-        transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-      />
+    <header id="top" className="relative isolate overflow-hidden rounded-3xl border border-ink shadow-lift">
+      <div className="absolute inset-0 -z-10 bg-ink" />
       {thumbnail && (
-        <img src={thumbnail} alt="" className="absolute inset-0 -z-10 h-full w-full object-cover" loading="eager" />
+        <img
+          src={thumbnail}
+          alt=""
+          className="photo-duotone absolute inset-0 -z-10 h-full w-full object-cover opacity-70"
+          loading="eager"
+        />
       )}
-      <div className="absolute inset-0 -z-[5] bg-gradient-to-t from-ink/85 via-ink/35 to-ink/10" />
+      <div className="absolute inset-0 -z-[5] bg-gradient-to-t from-ink via-ink/70 to-ink/20" />
 
       {floatIcons.map(({ Icon, top, left, size, duration, delay, rotate }, i) => (
         <motion.div
           key={i}
-          className="pointer-events-none absolute -z-[2] text-paper/25"
+          className="pointer-events-none absolute -z-[2] text-olive/40"
           style={{ top, left, width: size, height: size }}
           animate={{ y: [0, -14, 0], rotate: [rotate, rotate + 6, rotate] }}
           transition={{ duration, repeat: Infinity, ease: 'easeInOut', delay }}
@@ -40,39 +41,49 @@ export function Hero({ wikiTitle, countryName }: Props) {
         </motion.div>
       ))}
 
-      <div className="relative flex min-h-[62vw] flex-col justify-end gap-4 px-6 py-10 sm:min-h-[420px] sm:px-12 sm:py-14">
+      <div className="relative flex min-h-[68vw] flex-col justify-end gap-5 px-6 py-10 sm:min-h-[440px] sm:px-12 sm:py-14">
         <motion.span
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-paper/50 bg-ink/30 px-3 py-1 font-hand text-xl text-paper backdrop-blur-sm"
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-olive/60 bg-ink/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-olive backdrop-blur-sm"
         >
           <motion.span
             animate={{ rotate: 360 }}
             transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
             className="inline-flex"
           >
-            <IconCompass className="h-5 w-5" />
+            <IconCompass className="h-4 w-4" />
           </motion.span>
-          diario de ruta · {countryName}
+          Diario de ruta · {countryName}
         </motion.span>
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.1 }}
-          className="max-w-2xl text-4xl font-semibold leading-[1.05] text-paper sm:text-6xl"
+          className="max-w-3xl font-display text-5xl font-normal leading-[0.92] text-paper sm:text-7xl lg:text-8xl"
         >
-          Recorre {countryName} sin perder ni un día manejando
+          Recorre {countryName} sin perder ni un día manejando.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.2 }}
-          className="max-w-lg text-base leading-relaxed text-paper/90 sm:text-lg"
+          className="max-w-md text-base leading-relaxed text-paper/80 sm:text-lg"
         >
           Cuéntanos cuántos días tienes y qué no te quieres perder. Te devolvemos la ruta con menos
           carretera, un itinerario día a día y dónde comer en cada parada.
         </motion.p>
+        <motion.a
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          href="#bitacora"
+          className="group mt-1 inline-flex w-fit items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-paper"
+        >
+          Arma tu ruta
+          <span className="transition-transform group-hover:translate-x-1.5">→</span>
+        </motion.a>
       </div>
     </header>
   );

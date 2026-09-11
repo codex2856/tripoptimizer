@@ -136,9 +136,10 @@ export function CustomTripForm({ value, onChange, onStart }: Props) {
         disabled={!hubQuery.trim() || status === 'suggesting'}
         whileHover={hubQuery.trim() ? { y: -2 } : undefined}
         whileTap={hubQuery.trim() ? { scale: 0.97 } : undefined}
-        className="rounded-2xl bg-terracotta px-5 py-3.5 text-base font-semibold text-paper shadow-soft transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+        className="group flex items-center justify-center gap-2 rounded-2xl bg-ink px-5 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-paper shadow-soft transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
       >
         {status === 'suggesting' ? 'Buscando qué ver…' : 'Sugerir itinerario'}
+        <span className="transition-transform group-hover:translate-x-1">→</span>
       </motion.button>
 
       {status === 'no-suggestions' && (
@@ -192,7 +193,7 @@ export function CustomTripForm({ value, onChange, onStart }: Props) {
               type="button"
               onClick={addManualStop}
               disabled={manualStatus === 'loading'}
-              className="flex-none rounded-2xl bg-olive px-4 py-2.5 text-sm font-semibold text-paper transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+              className="flex-none rounded-2xl bg-olive px-4 py-2.5 text-xs font-bold uppercase tracking-[0.08em] text-ink transition-transform hover:-translate-y-0.5 disabled:opacity-60"
             >
               {manualStatus === 'loading' ? '…' : 'Agregar'}
             </button>
@@ -207,9 +208,10 @@ export function CustomTripForm({ value, onChange, onStart }: Props) {
               onClick={onStart}
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
-              className="mt-4 w-full rounded-2xl bg-terracotta px-5 py-3.5 text-base font-semibold text-paper shadow-soft"
+              className="group mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-terracotta px-5 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-paper shadow-soft"
             >
               Armar itinerario
+              <span className="transition-transform group-hover:translate-x-1">→</span>
             </motion.button>
           )}
         </div>
@@ -223,7 +225,10 @@ const inputCls =
 
 function FieldLabel({ icon, text, htmlFor }: { icon: ReactNode; text: string; htmlFor?: string }) {
   return (
-    <label htmlFor={htmlFor} className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink-soft">
+    <label
+      htmlFor={htmlFor}
+      className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-ink-soft"
+    >
       <span className="text-terracotta">{icon}</span>
       {text}
     </label>
